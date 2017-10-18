@@ -13,8 +13,42 @@ const commandList = {
     }
 }
 
-const body = document.body;
 
+const controllables = [...document.querySelectorAll('.controllable')];
+let transcript;
+let targetedElement;
+let status = 'SELECTING ELEMENT';
 
+controllables.forEach( (el, i) => {
+    el.style.top = Math.random()*60 + 'vh';
+    el.style.left = Math.random()*60 + 'vw';
+})
 
-// When speech is recognised, check through commandlist to see if that phrase exists. If it does, listen for next utterance.
+window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  const recognition = new SpeechRecognition();
+  recognition.interimResults = false;
+  recognition.lang = 'en-GB';
+
+  recognition.addEventListener('result', e => {
+    transcript = e.results[0][0].transcript;
+    console.log(transcript)
+
+    // IF WE ARE CURRENTLY SELECTING AN ELEMENT
+    if (status === 'SELECTING ELEMENT'){
+          // LOOP THROUGH CONTROLLABLES AND CHECK FOR A MATCH
+        controllables.forEach( elem => {
+            if (transcript.toLowerCase().includes(elem.dataset.key.toLowerCase())){ 
+                targetedElement = elem;
+                status = 'SELECTING COLOR';
+            }
+        })
+    } else if (status === 'SELECTING COLOR'){
+            targetedElement.style.background = transcript;
+            status = 'SELECTING ELEMENT';
+    }
+  })
+  // When recognition has recognised the end of an utterance, start recognition again
+  recognition.addEventListener('end', recognition.start);
+  recognition.start();
+  
